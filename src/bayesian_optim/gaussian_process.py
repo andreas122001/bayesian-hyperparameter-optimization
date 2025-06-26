@@ -14,13 +14,13 @@ class GaussianProcess:
 
     def fit(self, train_x, train_y) -> GPyTorchPosterior:
         likelihood = GaussianLikelihood(noise_prior=GammaPrior(1.0, 10.0))
-        gp = SingleTaskGP(
+        model = SingleTaskGP(
             train_X=train_x.unsqueeze(-1).double(),
             train_Y=train_y.unsqueeze(-1).double(),
             likelihood=likelihood,
         )
-        mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll, approx_mll=True)
 
-        return gp.posterior
+        return model
 
