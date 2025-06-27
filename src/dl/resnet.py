@@ -8,6 +8,11 @@ class BasicBlock(nn.Module):
     """
     Implements the basic residual block of the ResNet architecture. Consists of two convolutional layers and a
     residual connection.
+
+    :param ch_in: how many input channels
+    :param ch_out: how many output channels
+    :param stride: the stride to use for the first layer
+    :param kernel_size: the kernel size for both layers
     """
 
     def __init__(
@@ -17,12 +22,6 @@ class BasicBlock(nn.Module):
         stride: int = 1,
         kernel_size: Union[int, tuple[int, int]] = 3,
     ) -> None:
-        """
-        :param ch_in: how many input channels
-        :param ch_out: how many output channels
-        :param stride: the stride to use for the first layer
-        :param kernel_size: the kernel size for both layers
-        """
         super(BasicBlock, self).__init__()
         self.layers = nn.Sequential(
             # First layer
@@ -59,11 +58,11 @@ class CustomResNet(nn.Module):
             nn.ReLU(),
         )
         self.layers = nn.Sequential(
-            self._make_layer(32, 32, n_blocks=2, stride=1, kernel_size=3),
-            self._make_layer(32, 64, n_blocks=3, stride=2, kernel_size=3),
-            self._make_layer(64, 128, n_blocks=5, stride=2, kernel_size=3),
-            self._make_layer(128, 128, n_blocks=7, stride=2, kernel_size=3),
-            self._make_layer(128, 128, n_blocks=7, stride=2, kernel_size=3),
+            self._make_layer(32, 32, n_blocks=1, stride=1, kernel_size=3),
+            self._make_layer(32, 64, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(64, 128, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(128, 128, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(128, 128, n_blocks=1, stride=2, kernel_size=3),
         )
         self.fc = nn.Linear(128, n_classes)
 

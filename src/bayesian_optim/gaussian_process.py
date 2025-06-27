@@ -5,18 +5,17 @@ from botorch.utils.transforms import standardize, normalize  # might need
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.priors import GammaPrior
 
-from botorch.posteriors.gpytorch import GPyTorchPosterior
-
+from botorch.models.gpytorch import GPyTorchModel
 
 class GaussianProcess:
     def __init__(self) -> None:
         pass
 
-    def fit(self, train_x, train_y) -> GPyTorchPosterior:
+    def fit(self, train_x, train_y) -> GPyTorchModel:
         likelihood = GaussianLikelihood(noise_prior=GammaPrior(1.0, 10.0))
         model = SingleTaskGP(
-            train_X=train_x.unsqueeze(-1).double(),
-            train_Y=train_y.unsqueeze(-1).double(),
+            train_X=train_x,
+            train_Y=train_y,
             likelihood=likelihood,
         )
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
