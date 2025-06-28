@@ -19,6 +19,20 @@ class Hyperparameters:
         self.batch_size = batch_size
 
 
+class Accuracy:
+    def __init__(self) -> None:
+        self.correct: int = 0
+        self.total: int = 0
+
+    def update(self, logits: torch.Tensor, targets: torch.Tensor) -> None:
+        pred = logits.argmax(-1)
+        self.correct += pred.eq(targets).sum().item()
+        self.total += targets.shape[0]
+
+    def aggregate(self) -> torch.Tensor:
+        return torch.tensor(self.correct / self.total)
+
+
 class ResNetTrainer:
     def __init__(self, model: CustomResNet):
         self.step = 0
@@ -65,16 +79,16 @@ class ResNetTrainer:
             self.test_ds, batch_size=hparams.batch_size
         )
 
-        total_loss = 0
+        accuracy = Accuracy()
         self.model.to(self.device).eval()
         with torch.inference_mode():
             for batch in tqdm(data_loader, desc="Testing"):
                 inputs, targets = self._extract_batch(batch)
                 logits = self.model(inputs)
 
-                total_loss += self.criterion(logits, targets).cpu()
+                accuracy.update(logits, targets)
 
-        return total_loss
+        return accuracy.aggregate()
 
     def train_and_test(self, hparams: Hyperparameters) -> torch.Tensor:
         self.model.reset()  # reset params to avoid reinstantiation
