@@ -46,10 +46,15 @@ class BasicBlock(nn.Module):
         x = self.activation_out(x)
         return x
 
+    def reset_parameters(self) -> None:
+        for module in self.modules():
+            if module is not self and hasattr(module, "reset_parameters"):
+                module.reset_parameters()
+
 
 class CustomResNet(nn.Module):
 
-    def __init__(self, channels_in = 1, n_classes=10):
+    def __init__(self, channels_in=1, n_classes=10):
         super(CustomResNet, self).__init__()
 
         self.conv_init = nn.Sequential(
@@ -75,7 +80,12 @@ class CustomResNet(nn.Module):
         x = self.fc(x)
 
         return x
-        
+
+    def reset(self) -> None:
+        for module in self.modules():
+            if module is not self and hasattr(module, 'reset_parameters'):
+                module.reset_parameters()
+    
     def _make_layer(
         self,
         channels_in: int,
@@ -92,7 +102,9 @@ class CustomResNet(nn.Module):
         )
         for _ in range(1, n_blocks):
             layers.append(
-                BasicBlock(channels_out, channels_out, stride=1, kernel_size=kernel_size)
+                BasicBlock(
+                    channels_out, channels_out, stride=1, kernel_size=kernel_size
+                )
             )
 
         return nn.Sequential(*layers)
