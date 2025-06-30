@@ -23,13 +23,14 @@ class BasicBlock(nn.Module):
         kernel_size: Union[int, tuple[int, int]] = 3,
     ) -> None:
         super(BasicBlock, self).__init__()
+        padding = (kernel_size - 1) // 2
         self.layers = nn.Sequential(
             # First layer
-            nn.Conv2d(ch_in, ch_out, kernel_size, padding=1, stride=stride),
+            nn.Conv2d(ch_in, ch_out, kernel_size, padding=padding, stride=stride),
             nn.BatchNorm2d(ch_out),
             nn.LeakyReLU(),
             # Second layer
-            nn.Conv2d(ch_out, ch_out, kernel_size, padding=1, stride=1),
+            nn.Conv2d(ch_out, ch_out, kernel_size, padding=padding, stride=1),
             nn.BatchNorm2d(ch_out),
         )
 
@@ -58,18 +59,18 @@ class CustomResNet(nn.Module):
         super(CustomResNet, self).__init__()
 
         self.conv_init = nn.Sequential(
-            nn.Conv2d(channels_in, 32, kernel_size=3, stride=2, padding=2),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(channels_in, 16, kernel_size=3, stride=2, padding=2),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
         )
         self.layers = nn.Sequential(
-            self._make_layer(32, 32, n_blocks=1, stride=1, kernel_size=3),
+            self._make_layer(16, 16, n_blocks=1, stride=1, kernel_size=3),
+            self._make_layer(16, 32, n_blocks=1, stride=2, kernel_size=3),
             self._make_layer(32, 64, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(64, 128, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(128, 128, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(128, 128, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(64, 64, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(64, 64, n_blocks=1, stride=2, kernel_size=3),
         )
-        self.fc = nn.Linear(128, n_classes)
+        self.fc = nn.Linear(64, n_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv_init(x)
@@ -120,6 +121,6 @@ if __name__ == "__main__":
     for i in tqdm(range(625)):
         t = torch.rand(96, 1, 28, 28)
         o = resnet(t)
-        print(o)
+        # print(o)
     t1 = perf_counter()
     print(f"{t1 - t0:.2f} seconds")

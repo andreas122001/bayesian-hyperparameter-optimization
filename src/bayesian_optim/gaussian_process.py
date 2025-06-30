@@ -9,16 +9,15 @@ from botorch.models.gpytorch import GPyTorchModel
 
 class GaussianProcess:
     def __init__(self) -> None:
-        pass
+        self.likelihood = GaussianLikelihood(noise_prior=GammaPrior(1.0, 10.0))  # can be parameterized
 
     def fit(self, train_x, train_y) -> GPyTorchModel:
-        likelihood = GaussianLikelihood(noise_prior=GammaPrior(1.0, 10.0))
         model = SingleTaskGP(
             train_X=train_x,
             train_Y=train_y,
-            likelihood=likelihood,
+            likelihood=self.likelihood,
         )
-        mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)  # could maybe also be parameterized
         fit_gpytorch_mll(mll, approx_mll=True)
 
         return model
