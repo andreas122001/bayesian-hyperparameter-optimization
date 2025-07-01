@@ -33,7 +33,7 @@ class Accuracy:
         return torch.tensor(self.correct / self.total)
 
 
-class ResNetTrainer:
+class FashionMNISTTrainer:
     def __init__(self, model: CustomResNet):
         self.step = 0
         self.model = model
@@ -69,8 +69,16 @@ class ResNetTrainer:
         )
 
         self.model.to(self.device).train()
-        for _ in tqdm(range(epochs), desc="Training"):
-            for batch in tqdm(data_loader, desc="Batches", leave=False):
+        for _ in tqdm(
+            range(epochs), desc="Training", leave=False, position=1, unit="Epochs"
+        ):
+            for batch in tqdm(
+                data_loader,
+                desc="Training steps",
+                leave=False,
+                position=2,
+                unit="Batches",
+            ):
                 self._training_step(batch)
 
     def test(self, hparams: Hyperparameters) -> torch.Tensor:
@@ -82,7 +90,7 @@ class ResNetTrainer:
         accuracy = Accuracy()
         self.model.to(self.device).eval()
         with torch.inference_mode():
-            for batch in tqdm(data_loader, desc="Testing"):
+            for batch in tqdm(data_loader, desc="Testing", leave=False, position=1):
                 inputs, targets = self._extract_batch(batch)
                 logits = self.model(inputs)
 
@@ -113,7 +121,7 @@ class ResNetTrainer:
 if __name__ == "__main__":
 
     model = CustomResNet()
-    trainer = ResNetTrainer(model)
+    trainer = FashionMNISTTrainer(model)
 
     hparams = Hyperparameters(
         epochs=5,

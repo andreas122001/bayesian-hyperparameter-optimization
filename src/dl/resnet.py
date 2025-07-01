@@ -84,9 +84,9 @@ class CustomResNet(nn.Module):
 
     def reset(self) -> None:
         for module in self.modules():
-            if module is not self and hasattr(module, 'reset_parameters'):
+            if module is not self and hasattr(module, "reset_parameters"):
                 module.reset_parameters()
-    
+
     def _make_layer(
         self,
         channels_in: int,

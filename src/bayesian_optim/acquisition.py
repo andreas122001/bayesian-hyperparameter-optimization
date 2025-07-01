@@ -3,12 +3,11 @@ from botorch.models.gpytorch import GPyTorchModel
 import torch
 
 
-
 class AcquisitionFunction(ABC):
     def __init__(self, model: GPyTorchModel) -> None:
         super().__init__()
         self.model = model
-    
+
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return self.acquire(x)
 
@@ -19,20 +18,23 @@ class AcquisitionFunction(ABC):
 
 class CustomExpectedImprovement(AcquisitionFunction):
     """
-    Implementation of a custom Expected Improvement (EI) function including a exploration parameter ξ. 
-    
+    Implementation of a custom Expected Improvement (EI) function including a exploration parameter ξ.
+
     :param model: the trained gaussian process model
     :param best_y: the best observed value
     :param ksi: parameter for controlling exploration-exploitation trade-off. Higher Ksi (ξ) increases exploration.
     """
-    def __init__(self, model: GPyTorchModel, best_y: torch.Tensor, ksi: float = 0.0) -> None:
+
+    def __init__(
+        self, model: GPyTorchModel, best_y: torch.Tensor, ksi: float = 0.0
+    ) -> None:
         super().__init__(model)
         self.best_y = best_y
         self.ksi = ksi
 
     def acquire(self, x: torch.Tensor) -> torch.Tensor:
         # See https://ekamperi.github.io/machine%20learning/2021/06/11/acquisition-functions.html
-        
+
         # Definition:
         # EI(x) = (μ(x) - f(x*) − ξ) * Φ((μ(x) - f(x*) - ξ)/σ(x)) + σ(x) * φ((μ(x) - f(x*) - ξ)/σ(x))
 

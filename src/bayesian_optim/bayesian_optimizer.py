@@ -2,6 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from collections.abc import Callable
+from tqdm import tqdm
 
 from src.bayesian_optim.gaussian_process import GaussianProcess
 from src.bayesian_optim.acquisition import CustomExpectedImprovement
@@ -23,7 +24,7 @@ class BayesianOptimizer:
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
-        self.grid = torch.linspace(0.0001, 1, steps=100).unsqueeze(-1).unsqueeze(-1)
+        self.grid = torch.linspace(0.001, 1, steps=100).unsqueeze(-1).unsqueeze(-1)
 
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
@@ -68,7 +69,7 @@ class BayesianOptimizer:
         """
         sampled_x = self.sobol_sampler.draw(n_samples, dtype=torch.float64)
 
-        for next_x in sampled_x:
+        for next_x in tqdm(sampled_x, desc="Initializing"):
             next_y = self.objective_f(next_x)
             self._add_datapoint(next_x, next_y)
 
@@ -91,9 +92,12 @@ class BayesianOptimizer:
         plt.title("Predicted objective")
         plt.plot(self.grid[:, 0, 0], mean, label="Mean")
         plt.axvline(
-            best_x.item(), ymax=best_y.item(), linestyle="dashed", label="Current best"
+            best_x.item(),
+            ymax=mean[:-1].max().item(),
+            linestyle="dashed",
+            label="Current best",
         )
-        # plt.text(best_x + 0.01, mean.min(), s=f"({best_x:.2f}, {best_y:.2f})")
+        plt.text(best_x + 0.01, mean.min(), s=f"x={best_x:.3f}")
         plt.fill_between(
             self.grid[:, 0, 0],
             mean - 2 * std,
@@ -113,7 +117,7 @@ class BayesianOptimizer:
         plt.legend()
 
         plt.subplot(2, 1, 2)
-        plt.title("Aquisition function")
+        plt.title("Acquisition function")
         plt.plot(self.grid[:, 0, 0], ei_val.detach())
         plt.scatter(
             self.grid[ei_val.argmax(0), 0, 0], ei_val.detach().max(), color="green"
@@ -132,14 +136,14 @@ class BayesianOptimizer:
 
         :returns: the x and y values as a tuple of tensors.
         """
-        return optimizer.grid[mean.argmax(), 0, 0], mean.max()
+        return self.grid[mean.argmax(), 0, 0], mean.max()
 
     def _add_datapoint(self, x: torch.Tensor, y: torch.Tensor) -> None:
         """
         Adds the xy-coordinate to the training set.
 
         :param x: the x coord.
-        :param y: the y coord. 
+        :param y: the y coord.
         """
         self.train_x = torch.cat([self.train_x, x])
         self.train_y = torch.cat([self.train_y, y])
