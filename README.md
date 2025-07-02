@@ -7,18 +7,20 @@ Supports the use of different epochs, batch sizes, and ResNet layer sizes. The o
 
 ## Installation
 
-Create a venv (optional) and install requirements:
+Create a virtual environment (optional) and install requirements:
 
 ```bash
 python -m venv .venv
-. .venv/bin/activate  # assuming linux
+. .venv/bin/activate  # assuming Linux/UNIX
 pip install -r requirements.txt
 ```
+
+If you are using Windows, run the `.venv\Scripts\activate` file. If you want to use CUDA on Windows you need to install PyTorch with CUDA manually. See [PyTorch's getting started](https://pytorch.org/get-started/locally/).
 
 
 ## How to use
 
-There are two ways to use this project: (i) run it as a Python script, and (ii) run it as a Jupyter Notebook. 
+There are two ways to use this demo: (i) run it as a Python script, and (ii) run it as a Jupyter Notebook. 
 
 
 ### (i) Python script
@@ -29,7 +31,7 @@ Basic usage would be to just run the script:
 python optimize.py
 ```
 
-This will run with default values, aka. 256 batch size, 10 epochs and a ResNet model with all layers of 16 hidden dimensions each.
+This will run with default values, aka. 256 batch size, 10 epochs and a ResNet model with all layers of 16 hidden dimensions each. Figures will be saved under `./figures/`.
 
 It can be further customized like this:
 
