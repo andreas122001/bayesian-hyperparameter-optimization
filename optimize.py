@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import argparse
 from argparse import Namespace
 from tqdm import tqdm
-from typing import Optional
 
 from src.dl.resnet import CustomLayerConfig
 from src.bayesian_optim.bayesian_optimizer import BayesianOptimizer
@@ -53,10 +52,10 @@ def _create_args() -> Namespace:
     )
     parser.add_argument(
         "--layers",
-        nargs=5,
+        nargs=6,
         type=int,
-        default=[16, 16, 16, 16, 16],
-        help="The dimensionality of each of the five layers of the custom ResNet model. Used to customize the size of the model.",
+        default=[16, 16, 16, 16, 16, 16],
+        help="The dimensionality of each of the six layers of the custom ResNet model. Used to customize the size of the model.",
     )
     parser.add_argument(
         "--batch-size",

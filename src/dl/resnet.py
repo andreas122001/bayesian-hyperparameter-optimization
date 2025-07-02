@@ -10,7 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class CustomLayerConfig:
     """
-    A wrapper class for the layer dimensions for the five layers of the custom ResNet model.
+    A wrapper class for the layer dimensions for the six layers of the custom ResNet model.
     """
 
     def __init__(
@@ -84,11 +84,11 @@ class _BasicBlock(nn.Module):
 
 class CustomResNet(nn.Module):
     """
-    A custom ResNet model for demonstration. Contains five layers, enough to fully downsample the data from the FashionMNIST dataset from (1, 28, 28) to (dim, 1, 1) using strides of two.
+    A custom ResNet model for demonstration. Contains six layers, enough to fully downsample the data from the FashionMNIST dataset from (1, 28, 28) to (dim, 1, 1) using strides of two.
 
     :param channels_in: how many channels the input data has.
     :param n_classes: how many output classes to predict.
-    :layer_cfg: the config for the five ResNet layers.
+    :layer_cfg: the config for the six ResNet layers.
     """
 
     def __init__(
