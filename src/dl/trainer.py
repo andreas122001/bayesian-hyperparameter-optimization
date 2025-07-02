@@ -16,6 +16,7 @@ class Hyperparameters:
     """
     A wrapper class for the hyperparameters.
     """
+
     def __init__(self, epochs, learning_rate, batch_size) -> None:
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -24,8 +25,9 @@ class Hyperparameters:
 
 class Accuracy:
     """
-    Handles accuracy calculation in a HuggingFace-esque metric handling manner.  
+    Handles accuracy calculation in a HuggingFace-esque metric handling manner.
     """
+
     def __init__(self) -> None:
         self.correct: int = 0
         self.total: int = 0
@@ -52,21 +54,25 @@ class Accuracy:
 
 class FashionMNISTTrainer:
     """
-    A trainer for training on the FashionMNIST dataset. 
+    A trainer for training on the FashionMNIST dataset.
 
     :param model: the model to train.
     :param device: which device to train on, e.g. CUDA.
+    :param use_tqdm: whether to use tqdm loading bars or not. Has weird behavior in notebooks so it can be disabled.
     """
+
     def __init__(
         self,
         model: nn.Module,
         device: torch.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         ),
+        use_tqdm: bool = True,
     ) -> None:
         self.step = 0
         self.model = model
         self.device = device
+        self.use_tqdm = use_tqdm
         self.criterion = nn.CrossEntropyLoss()
 
         # We are only using FashionMNIST in this demo anyway, just load it
@@ -106,14 +112,18 @@ class FashionMNISTTrainer:
 
         self.model.to(self.device).train()
         for _ in tqdm(
-            range(epochs), desc="Training", leave=False, position=1, unit="Epochs"
+            range(epochs),
+            desc="Training",
+            leave=False,
+            unit="Epochs",
+            disable=not self.use_tqdm,
         ):
             for batch in tqdm(
                 data_loader,
                 desc="Training steps",
                 leave=False,
-                position=2,
                 unit="Batches",
+                disable=not self.use_tqdm,
             ):
                 self._training_step(batch)
 
@@ -132,7 +142,7 @@ class FashionMNISTTrainer:
         accuracy = Accuracy()
         self.model.to(self.device).eval()
         with torch.inference_mode():
-            for batch in tqdm(data_loader, desc="Testing", leave=False, position=1):
+            for batch in tqdm(data_loader, desc="Testing", leave=False, disable=not self.use_tqdm):
                 inputs, targets = self._extract_batch(batch)
                 logits = self.model(inputs)
 
@@ -177,7 +187,9 @@ class FashionMNISTTrainer:
 
         self.optimizer.step()
 
-    def _extract_batch(self, batch: list[torch.tensor, torch.tensor]) -> tuple[torch.tensor, torch.tensor]:
+    def _extract_batch(
+        self, batch: list[torch.tensor, torch.tensor]
+    ) -> tuple[torch.tensor, torch.tensor]:
         """
         Extracts the batch and sends each item to the device.
 
