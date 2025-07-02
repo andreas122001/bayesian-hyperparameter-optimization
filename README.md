@@ -72,4 +72,6 @@ options:
 
 ### (ii) Jupyter Notebook
 
-The `notebook.ipynb`-file is provided for running it more interactively as a Notebook. Open it in a Jupyter server or with the [Jupyter VC code extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
+The [notebook.ipynb](notebook.ipynb)-file is provided for running it more interactively as a Notebook. Open it in a Jupyter server or with the [Jupyter VC code extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
+
+The [test.ipynb](test.ipynb) contains some initial testing with Bayesian Optimization and a "minimal viable product", aka. it completes the task with just notebook code.
