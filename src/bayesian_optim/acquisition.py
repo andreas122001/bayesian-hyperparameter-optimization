@@ -9,6 +9,7 @@ class AcquisitionFunction(ABC):
 
     :param model: the trained gaussian process model
     """
+
     def __init__(self, model: GPyTorchModel) -> None:
         super().__init__()
         self.model = model

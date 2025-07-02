@@ -12,6 +12,7 @@ class GaussianProcess:
     """
     A wrapper class for the gaussian process.
     """
+
     def __init__(self) -> None:
         self.likelihood = GaussianLikelihood(
             noise_prior=GammaPrior(1.0, 10.0)

@@ -142,7 +142,9 @@ class FashionMNISTTrainer:
         accuracy = Accuracy()
         self.model.to(self.device).eval()
         with torch.inference_mode():
-            for batch in tqdm(data_loader, desc="Testing", leave=False, disable=not self.use_tqdm):
+            for batch in tqdm(
+                data_loader, desc="Testing", leave=False, disable=not self.use_tqdm
+            ):
                 inputs, targets = self._extract_batch(batch)
                 logits = self.model(inputs)
 
