@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import argparse
 from argparse import Namespace
 from tqdm import tqdm
+from typing import Optional
 
+from src.dl.resnet import CustomLayerConfig
 from src.bayesian_optim.bayesian_optimizer import BayesianOptimizer
 from src.dl.trainer import FashionMNISTTrainer, Hyperparameters
 from src.dl.resnet import CustomResNet
@@ -14,10 +16,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logger.setLevel("INFO")
+
 
 def _create_args() -> Namespace:
     parser = argparse.ArgumentParser(
-        prog="Bayesian Hyperparameter Optimizer",
+        prog="BayesianHyperparameterOptimizer",
         description="",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -38,30 +42,65 @@ def _create_args() -> Namespace:
         "-i",
         "--interactive",
         action="store_true",
-        help="Displays the figure interactively for each iteration.",
+        help="Flag for displaying the figure interactively for each iteration in a blocking manner.",
     )
     parser.add_argument(
         "-s",
-        "--do-save",
-        action="store_true",
-        help="Saves the figures under './figures/'.",
+        "--save-path",
+        type=str,
+        default="./figures/",
+        help="Where to save the figures, if specified.",
+    )
+    parser.add_argument(
+        "--layers",
+        nargs=5,
+        type=int,
+        default=[16, 16, 16, 16, 16],
+        help="The dimensionality of each of the five layers of the custom ResNet model. Used to customize the size of the model.",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=256,
+        help="The batch size to use for training the ResNet model.",
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=5,
+        help="How many epochs to use for each training run of the ResNet model.",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        help="Which device to run the training on, e.g. 'cuda' or 'cpu'. "
+        "Option 'auto' chooses cuda if available, else CPU. With multiple GPUs, specify the id with 'cuda:id', e.g.: 'cuda:0'.",
     )
 
     return parser.parse_args()
 
 
 def main(args: Namespace) -> None:
-    model = CustomResNet()
-    ml_trainer = FashionMNISTTrainer(model)
+    device = (
+        torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if args.device == "auto"
+        else torch.device(args.device)
+    )
 
+    layer_cnf = CustomLayerConfig(*args.layers)
+    model = CustomResNet(channels_in=1, n_classes=10, layer_cfg=layer_cnf)
+    ml_trainer = FashionMNISTTrainer(model, device=device)
+
+    # Define the objective function, sets up the trainer to train and test given a learning rate
     def objective(
         lr: torch.Tensor,
-    ):  # could potentially be changed to select which param to optimize for
+    ):  # could potentially be changed to select which param to optimize for (e.g. other than LR)
         torch.manual_seed(0)  # for more stable BO estimate
         hyperparams = Hyperparameters(
-            epochs=2,
+            epochs=args.epochs,
             learning_rate=lr.item(),
-            batch_size=96,
+            batch_size=args.batch_size,
         )
         # Train, test and return the accuracy of the ResNet model
         return (
@@ -82,14 +121,15 @@ def main(args: Namespace) -> None:
         if args.interactive:
             plt.show()
 
-        if args.do_save:
-            os.makedirs("./figures", exist_ok=True)
-            fig.savefig(f"figures/fig_{i}.png")
+        if args.save_path is not None:
+            fig_path = os.path.join(args.save_path, f"fig_{i}.png")
+            os.makedirs(args.save_path, exist_ok=True)
+            fig.savefig(fig_path)
 
     best_x, best_y = optimizer.get_current_max_point(mean)
     logging.info(
         "Optimization completed!\n"
-        f"Estimated best learning rate is {best_x:.3f} with an accuracy of {best_y:.2f}."
+        f"Estimated best learning rate is {best_x:.3f} with an accuracy of {best_y*100:.2f} %."
     )
 
 

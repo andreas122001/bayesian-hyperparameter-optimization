@@ -3,8 +3,28 @@ import torch
 from torch import nn
 from typing import Union
 
+from dataclasses import dataclass
 
-class BasicBlock(nn.Module):
+
+# This could arguably also just be a fixed-size array
+@dataclass
+class CustomLayerConfig:
+    """
+    A wrapper class for the layer dimensions for the five layers of the custom ResNet model.
+    """
+
+    def __init__(
+        self, l0_dim=16, l1_dim=16, l2_dim=32, l3_dim=64, l4_dim=128, l5_dim=256
+    ) -> None:
+        self.l0 = l0_dim
+        self.l1 = l1_dim
+        self.l2 = l2_dim
+        self.l3 = l3_dim
+        self.l4 = l4_dim
+        self.l5 = l5_dim
+
+
+class _BasicBlock(nn.Module):
     """
     Implements the basic residual block of the ResNet architecture. Consists of two convolutional layers and a
     residual connection.
@@ -22,7 +42,7 @@ class BasicBlock(nn.Module):
         stride: int = 1,
         kernel_size: Union[int, tuple[int, int]] = 3,
     ) -> None:
-        super(BasicBlock, self).__init__()
+        super(_BasicBlock, self).__init__()
         padding = (kernel_size - 1) // 2
         self.layers = nn.Sequential(
             # First layer
@@ -55,37 +75,55 @@ class BasicBlock(nn.Module):
 
 class CustomResNet(nn.Module):
 
-    def __init__(self, channels_in=1, n_classes=10):
+    def __init__(
+        self,
+        channels_in=1,
+        n_classes=10,
+        layer_cfg: CustomLayerConfig = CustomLayerConfig(
+            l0_dim=16,
+            l1_dim=16,
+            l2_dim=16,
+            l3_dim=16,
+            l4_dim=16,
+            l5_dim=16,
+        ),
+    ):
         super(CustomResNet, self).__init__()
 
         self.conv_init = nn.Sequential(
-            nn.Conv2d(channels_in, 16, kernel_size=3, stride=2, padding=2),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(channels_in, layer_cfg.l0, kernel_size=3, stride=2, padding=2),
+            nn.BatchNorm2d(layer_cfg.l0),
             nn.ReLU(),
         )
+        # Use strides only for downsampling
         self.layers = nn.Sequential(
-            self._make_layer(16, 16, n_blocks=1, stride=1, kernel_size=3),
-            self._make_layer(16, 32, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(32, 64, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(64, 64, n_blocks=1, stride=2, kernel_size=3),
-            self._make_layer(64, 64, n_blocks=1, stride=2, kernel_size=3),
+            self._make_layer(
+                layer_cfg.l0, layer_cfg.l1, n_blocks=1, stride=1, kernel_size=3
+            ),
+            self._make_layer(
+                layer_cfg.l1, layer_cfg.l2, n_blocks=1, stride=2, kernel_size=3
+            ),
+            self._make_layer(
+                layer_cfg.l2, layer_cfg.l3, n_blocks=1, stride=2, kernel_size=3
+            ),
+            self._make_layer(
+                layer_cfg.l3, layer_cfg.l4, n_blocks=1, stride=2, kernel_size=3
+            ),
+            self._make_layer(
+                layer_cfg.l4, layer_cfg.l5, n_blocks=1, stride=2, kernel_size=3
+            ),
         )
-        self.fc = nn.Linear(64, n_classes)
+        self.fc = nn.Linear(layer_cfg.l5, n_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv_init(x)
 
         x = self.layers(x)
 
-        x = x.flatten(start_dim=1)  # ignore batch dim
+        x = x.flatten(start_dim=1)  # flatten all but batch dim
         x = self.fc(x)
 
         return x
-
-    def reset(self) -> None:
-        for module in self.modules():
-            if module is not self and hasattr(module, "reset_parameters"):
-                module.reset_parameters()
 
     def _make_layer(
         self,
@@ -97,13 +135,13 @@ class CustomResNet(nn.Module):
     ) -> nn.Module:
         layers = []
         layers.append(
-            BasicBlock(
+            _BasicBlock(
                 channels_in, channels_out, stride=stride, kernel_size=kernel_size
             )
         )
         for _ in range(1, n_blocks):
             layers.append(
-                BasicBlock(
+                _BasicBlock(
                     channels_out, channels_out, stride=1, kernel_size=kernel_size
                 )
             )

@@ -34,11 +34,19 @@ class Accuracy:
 
 
 class FashionMNISTTrainer:
-    def __init__(self, model: CustomResNet):
+    def __init__(
+        self,
+        model: nn.Module,
+        device: torch.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        ),
+    ):
         self.step = 0
         self.model = model
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.criterion = nn.CrossEntropyLoss()
+        
+        # We are only using FashionMNIST in this demo anyway, just load it
         self.train_ds = torchvision.datasets.FashionMNIST(
             root="data/",
             train=True,
@@ -99,10 +107,16 @@ class FashionMNISTTrainer:
         return accuracy.aggregate()
 
     def train_and_test(self, hparams: Hyperparameters) -> torch.Tensor:
-        self.model.reset()  # reset params to avoid reinstantiation
-        self.train(hparams=hparams)
+        # Reset params to avoid reinstantiation
+        self.reset_params()
 
+        self.train(hparams=hparams)
         return self.test(hparams=hparams)
+
+    def reset_params(self) -> None:
+        for module in self.model.modules():
+            if module is not self and hasattr(module, "reset_parameters"):
+                module.reset_parameters()
 
     def _training_step(self, batch):
         self.optimizer.zero_grad()
