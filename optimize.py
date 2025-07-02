@@ -11,17 +11,11 @@ from src.bayesian_optim.bayesian_optimizer import BayesianOptimizer
 from src.dl.trainer import FashionMNISTTrainer, Hyperparameters
 from src.dl.resnet import CustomResNet
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-logger.setLevel("INFO")
-
 
 def _create_args() -> Namespace:
     parser = argparse.ArgumentParser(
-        prog="BayesianHyperparameterOptimizer",
-        description="",
+        prog="optimizer",
+        description="Bayesian Optimizer for finding the best learning rate for a ResNet model on the Fashion MNIST dataset.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -113,7 +107,7 @@ def main(args: Namespace) -> None:
     optimizer = BayesianOptimizer(objective_f=objective)
     optimizer.initialize(args.init_steps)
 
-    for i in tqdm(range(args.optim_steps), desc="Optimization steps"):
+    for i in tqdm(range(args.optim_steps), desc="Optimization steps", leave=False):
         mean, std, ei = optimizer.step()
         fig = optimizer.visualize(mean, std, ei)
 
@@ -126,7 +120,7 @@ def main(args: Namespace) -> None:
             fig.savefig(fig_path)
 
     best_x, best_y = optimizer.get_current_max_point(mean)
-    logging.info(
+    print(
         "Optimization completed!\n"
         f"Estimated best learning rate is {best_x:.3f} with an accuracy of {best_y*100:.2f} %."
     )

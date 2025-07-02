@@ -69,7 +69,7 @@ class BayesianOptimizer:
         """
         sampled_x = self.sobol_sampler.draw(n_samples, dtype=torch.float64)
 
-        for next_x in tqdm(sampled_x, desc="Initializing"):
+        for next_x in tqdm(sampled_x, desc="Initializing", leave=False):
             next_y = self.objective_f(next_x)
             self._add_datapoint(next_x, next_y)
 
@@ -86,7 +86,7 @@ class BayesianOptimizer:
         """
         best_x, _ = self.get_current_max_point(mean)
 
-        plt.figure(figsize=(10, 9))
+        plt.figure(figsize=(9, 8))
 
         plt.subplot(2, 1, 1)
         plt.title("Predicted objective")
