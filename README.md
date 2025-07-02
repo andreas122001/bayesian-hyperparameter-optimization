@@ -31,7 +31,7 @@ Basic usage would be to just run the script:
 python optimize.py
 ```
 
-This will run with default values, aka. 256 batch size, 10 epochs and a ResNet model with all layers of 16 hidden dimensions each. Figures will be saved under `./figures/`.
+This will run with default values, aka. 3 Sobol initialization steps, 7 Bayesian optimization steps, 256 training batch size, 10 training epochs, and a ResNet model with all layers of 16 hidden dimensions each. Figures will be saved under `./figures/`.
 
 It can be further customized like this:
 
