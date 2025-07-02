@@ -2,7 +2,7 @@
 
 This is a small demo project on using Bayesian Optimization for finding the best learning rate for a ResNet model on the Fashion MNIST dataset.
 
-Supports the use of different epochs, batch sizes, and ResNet layer sizes. The optimizer assumes a range of 0.001 and 1.0, as a LR of 0.0 doesn't make sense.
+Supports the use of different epochs, batch sizes, and ResNet layer sizes. The optimizer assumes a range of 0.001 and 1.0, as a LR of 0.0 doesn't make sense. A Sobol sequence is used to generate initial samples for the Gaussian Process.
 
 
 ## Installation
