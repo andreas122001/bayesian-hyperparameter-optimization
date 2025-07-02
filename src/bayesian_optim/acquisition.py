@@ -4,6 +4,11 @@ import torch
 
 
 class AcquisitionFunction(ABC):
+    """
+    A base class for acquisition functions.
+
+    :param model: the trained gaussian process model
+    """
     def __init__(self, model: GPyTorchModel) -> None:
         super().__init__()
         self.model = model
@@ -33,6 +38,12 @@ class CustomExpectedImprovement(AcquisitionFunction):
         self.ksi = ksi
 
     def acquire(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Acquires the Expected Improvement (EI) for the input. The input should be of shape (batch_size, 1, dim).
+
+        :param x: the input to calculate EI for.
+        :returns: the expected improvement for x.
+        """
         # See https://ekamperi.github.io/machine%20learning/2021/06/11/acquisition-functions.html
 
         # Definition:

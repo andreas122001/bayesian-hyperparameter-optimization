@@ -84,7 +84,7 @@ class BayesianOptimizer:
         :param std: the current predicted standard deviation.
         :param ei_val: the current expected improvement values.
         """
-        best_x, best_y = self.get_current_max_point(mean)
+        best_x, _ = self.get_current_max_point(mean)
 
         plt.figure(figsize=(10, 9))
 
@@ -93,7 +93,6 @@ class BayesianOptimizer:
         plt.plot(self.grid[:, 0, 0], mean, label="Mean")
         plt.axvline(
             best_x.item(),
-            ymax=mean[:-1].max().item(),
             linestyle="dashed",
             label="Current best",
         )
@@ -114,7 +113,7 @@ class BayesianOptimizer:
         )
         plt.xlabel("Learning rate")
         plt.ylabel("Accuracy")
-        plt.legend()
+        plt.legend(loc=1, framealpha=0.6)
 
         plt.subplot(2, 1, 2)
         plt.title("Acquisition function")

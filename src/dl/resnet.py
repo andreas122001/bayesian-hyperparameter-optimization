@@ -61,6 +61,12 @@ class _BasicBlock(nn.Module):
         self.activation_out = nn.LeakyReLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Performs a forward pass in the input.
+
+        :param x: the input to predict on.
+        :returns: the model logits.
+        """
         residual = x
         x = self.layers(x)  # Conv layers
         x = x + self.downsample(residual)  # residual
@@ -68,12 +74,22 @@ class _BasicBlock(nn.Module):
         return x
 
     def reset_parameters(self) -> None:
+        """
+        Reset the parameters of the module.
+        """
         for module in self.modules():
             if module is not self and hasattr(module, "reset_parameters"):
                 module.reset_parameters()
 
 
 class CustomResNet(nn.Module):
+    """
+    A custom ResNet model for demonstration. Contains five layers, enough to fully downsample the data from the FashionMNIST dataset from (1, 28, 28) to (dim, 1, 1) using strides of two.
+
+    :param channels_in: how many channels the input data has.
+    :param n_classes: how many output classes to predict.
+    :layer_cfg: the config for the five ResNet layers.
+    """
 
     def __init__(
         self,
@@ -116,6 +132,12 @@ class CustomResNet(nn.Module):
         self.fc = nn.Linear(layer_cfg.l5, n_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Performs a forward pass in the input.
+
+        :param x: the input to predict on.
+        :returns: the model logits.
+        """
         x = self.conv_init(x)
 
         x = self.layers(x)
@@ -133,6 +155,16 @@ class CustomResNet(nn.Module):
         stride: int = 1,
         kernel_size: Union[int, tuple[int, int]] = 3,
     ) -> nn.Module:
+        """
+        Creates a layer of basic residual blocks.
+
+        :param channels_in: the input dimensionality.
+        :param channels_out: the output dimensionality.
+        :param n_block: how many basic blocks to use for the layer.
+        :param stride: which stride to use for the first block. Used for downsampling the input.
+        :param kernel_size: the kernel size.
+        :returns: the PyTorch module containing the layer.
+        """
         layers = []
         layers.append(
             _BasicBlock(
