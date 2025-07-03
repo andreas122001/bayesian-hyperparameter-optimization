@@ -16,18 +16,25 @@ class BayesianOptimizer:
     :param ksi: exploration parameter for the acquisition function, where a higher value favors exploration over explitation.
     """
 
-    def __init__(self, objective_f: Callable, ksi=0.01) -> None:
+    def __init__(
+        self, objective_f: Callable, min_bound, max_bound, ksi=0.01, use_log_scale=True
+    ) -> None:
         self.objective_f = objective_f
         self.ksi = ksi
+        self.use_log = use_log_scale
 
         self.gp = GaussianProcess()
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
-        self.bounds = torch.tensor([-4, 0])
-        self.grid = (
-            torch.logspace(*self.bounds, steps=100, base=10).unsqueeze(-1).unsqueeze(-1)
-        )
+        self.bounds = torch.tensor([min_bound, max_bound])
+        if self.use_log:
+            self.bounds = self.bounds.log10()
+            self.grid = torch.logspace(*self.bounds, steps=100, base=10)
+        else:
+            self.grid = torch.linspace(*self.bounds, steps=100)
+
+        self.grid = self.grid.unsqueeze(-1).unsqueeze(-1)
 
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
@@ -73,8 +80,9 @@ class BayesianOptimizer:
         sampled_x = self.sobol_sampler.draw(n_samples, dtype=torch.float64)
 
         # Convert Sobol sequence to log scale
-        sampled_x = self.bounds[0] + sampled_x * (self.bounds[1] - self.bounds[0])
-        sampled_x = 10**sampled_x
+        if self.use_log:
+            sampled_x = self.bounds[0] + sampled_x * (self.bounds[1] - self.bounds[0])
+            sampled_x = 10**sampled_x
 
         for next_x in tqdm(sampled_x, desc="Initializing", leave=False):
             next_y = self.objective_f(next_x)
@@ -98,7 +106,8 @@ class BayesianOptimizer:
         plt.subplot(2, 1, 1)
         plt.title("Predicted objective")
         plt.plot(self.grid[:, 0, 0], mean, label="Mean")
-        plt.xscale("log")
+        if self.use_log:
+            plt.xscale("log")
         plt.axvline(
             best_x.item(),
             linestyle="dashed",
@@ -121,12 +130,13 @@ class BayesianOptimizer:
         )
         plt.xlabel("Learning rate")
         plt.ylabel("Accuracy")
-        plt.legend(loc=1, framealpha=0.6)
+        plt.legend(loc=3, framealpha=0.6)
 
         plt.subplot(2, 1, 2)
         plt.title("Acquisition function")
         plt.plot(self.grid[:, 0, 0], ei_val.detach())
-        plt.xscale("log")
+        if self.use_log:
+            plt.xscale("log")
         plt.scatter(
             self.grid[ei_val.argmax(0), 0, 0], ei_val.detach().max(), color="green"
         )

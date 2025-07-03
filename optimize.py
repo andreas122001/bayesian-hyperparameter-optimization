@@ -32,6 +32,23 @@ def _create_args() -> Namespace:
         help="How many steps to perform Bayesian Optimization for.",
     )
     parser.add_argument(
+        "--min-lr",
+        type=float,
+        default=1e-4,
+        help="Minimum learning rate to check.",
+    )
+    parser.add_argument(
+        "--max-lr",
+        type=float,
+        default=1e-0,
+        help="Maximum learning rate to check.",
+    )
+    parser.add_argument(
+        "--no-log10",
+        action="store_true",
+        help="Uses linear scaling instead of logarithmic.",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Uses a much less expensive objective function for debug purposes.",
@@ -112,7 +129,12 @@ def main(args: Namespace) -> None:
     if args.debug:
         objective = lambda x: (torch.sin(3.14 * 1.6 * x) + 4).log()
 
-    optimizer = BayesianOptimizer(objective_f=objective)
+    optimizer = BayesianOptimizer(
+        objective_f=objective,
+        min_bound=args.min_lr,
+        max_bound=args.max_lr,
+        use_log_scale=not args.no_log10,
+    )
     optimizer.initialize(args.init_steps)
 
     for i in tqdm(range(args.optim_steps), desc="Optimization steps", leave=False):
