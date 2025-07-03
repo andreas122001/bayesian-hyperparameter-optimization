@@ -24,8 +24,10 @@ class BayesianOptimizer:
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
-        self.bounds = torch.tensor([-5, 0])
-        self.grid = torch.logspace(*self.bounds, steps=100, base=10).unsqueeze(-1).unsqueeze(-1)
+        self.bounds = torch.tensor([-4, 0])
+        self.grid = (
+            torch.logspace(*self.bounds, steps=100, base=10).unsqueeze(-1).unsqueeze(-1)
+        )
 
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
@@ -71,7 +73,7 @@ class BayesianOptimizer:
         sampled_x = self.sobol_sampler.draw(n_samples, dtype=torch.float64)
 
         # Convert Sobol sequence to log scale
-        sampled_x = self.bounds[0] + sampled_x*(self.bounds[1] - self.bounds[0])
+        sampled_x = self.bounds[0] + sampled_x * (self.bounds[1] - self.bounds[0])
         sampled_x = 10**sampled_x
 
         for next_x in tqdm(sampled_x, desc="Initializing", leave=False):
@@ -102,7 +104,7 @@ class BayesianOptimizer:
             linestyle="dashed",
             label="Current best",
         )
-        plt.text(best_x + 0.01, mean.min(), s=f"x={best_x:.3e}")
+        plt.text(best_x * 1.1, mean.min(), s=f"x={best_x:.1e}")
         plt.fill_between(
             self.grid[:, 0, 0],
             mean - 2 * std,
