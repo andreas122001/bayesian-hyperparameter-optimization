@@ -1,5 +1,7 @@
 import torch
 
+from typing import Optional
+
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -15,10 +17,8 @@ class GaussianProcess:
     A wrapper class for the gaussian process.
     """
 
-    def __init__(self) -> None:
-        self.likelihood = GaussianLikelihood(
-            noise_prior=GammaPrior(1.0, 10.0)
-        )  # can be parameterized
+    def __init__(self, bounds: Optional[torch.Tensor] = None) -> None:
+        self.bounds = bounds
 
     def fit(self, train_x, train_y) -> GPyTorchModel:
         """
@@ -28,10 +28,13 @@ class GaussianProcess:
         :param train_y: the training y observations
         :returns: the trained Gaussian Process model.
         """
+        if self.bounds is not None:
+            train_x = normalize(train_x, self.bounds)
+
         model = SingleTaskGP(
             train_X=train_x,
             train_Y=train_y,
-            likelihood=self.likelihood,
+            likelihood=GaussianLikelihood(noise_prior=GammaPrior(1.0, 10.0)),
         )
         mll = ExactMarginalLogLikelihood(
             model.likelihood, model
