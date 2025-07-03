@@ -32,6 +32,11 @@ def _create_args() -> Namespace:
         help="How many steps to perform Bayesian Optimization for.",
     )
     parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Uses a much less expensive objective function for debug purposes.",
+    )
+    parser.add_argument(
         "-i",
         "--interactive",
         action="store_true",
@@ -103,6 +108,9 @@ def main(args: Namespace) -> None:
             .cpu()
             .double()
         )
+    
+    if args.debug:
+        objective = lambda x: (torch.sin(3.14 * 1.6 * x)+ 4).log()
 
     optimizer = BayesianOptimizer(objective_f=objective)
     optimizer.initialize(args.init_steps)
