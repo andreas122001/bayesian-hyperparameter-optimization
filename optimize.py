@@ -108,9 +108,9 @@ def main(args: Namespace) -> None:
             .cpu()
             .double()
         )
-    
+
     if args.debug:
-        objective = lambda x: (torch.sin(3.14 * 1.6 * x)+ 4).log()
+        objective = lambda x: (torch.sin(3.14 * 1.6 * x) + 4).log()
 
     optimizer = BayesianOptimizer(objective_f=objective)
     optimizer.initialize(args.init_steps)
