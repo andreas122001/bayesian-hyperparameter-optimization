@@ -7,23 +7,34 @@ from tqdm import tqdm
 from src.bayesian_optim.gaussian_process import GaussianProcess
 from src.bayesian_optim.acquisition import CustomExpectedImprovement
 
+from botorch.utils.transforms import normalize
+
 
 class BayesianOptimizer:
     """
     Estimates the maximum point of the given function via a Gaussian Process (GP) and Expected Improvement (EI) acquisition.
 
     :param objective_f: the function to estimate.
+    :param min_bound: minimum bound for optimization.
+    :param max_bound: maximum bound for optimization.
     :param ksi: exploration parameter for the acquisition function, where a higher value favors exploration over explitation.
+    :param use_log_scale: use logarithmic instead of linear x-scaling.
+    :param debug: use inexpensive objective function and plot real objective function with the GP prediction.
     """
 
     def __init__(
-        self, objective_f: Callable, min_bound, max_bound, ksi=0.01, use_log_scale=True
+        self,
+        objective_f: Callable,
+        min_bound,
+        max_bound,
+        ksi=0.01,
+        use_log_scale: bool = True,
+        debug: bool = False,
     ) -> None:
         self.objective_f = objective_f
         self.ksi = ksi
         self.use_log = use_log_scale
-
-        self.gp = GaussianProcess()
+        self.debug = debug
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
@@ -36,6 +47,8 @@ class BayesianOptimizer:
 
         self.grid = self.grid.unsqueeze(-1).unsqueeze(-1)
 
+        self.gp = GaussianProcess(bounds=self.bounds.unsqueeze(-1))
+
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
 
@@ -47,13 +60,23 @@ class BayesianOptimizer:
 
         :returns: the mean, standard deviation, and expected improvement values as a tuple of tensors. 
         """
+        train_y = self.train_y.unsqueeze(-1)
+        train_x = self.train_x.unsqueeze(-1)
+        if self.use_log:
+            train_x = train_x.log10()
+
         gp_model = self.gp.fit(
-            self.train_x.unsqueeze(-1),
-            self.train_y.unsqueeze(-1),
+            train_x,
+            train_y,
         )
 
+        normalized_grid = self.grid
+        if self.use_log:
+            normalized_grid = normalized_grid.log10()
+        normalized_grid = normalize(normalized_grid, self.bounds.unsqueeze(-1))
+
         # Calculate the posterior mean and std for visualization
-        posterior = gp_model.posterior(self.grid)
+        posterior = gp_model.posterior(normalized_grid)
         mean = posterior.mean.detach().squeeze(-1).squeeze(-1)
         std = posterior.variance.sqrt().detach().squeeze(-1).squeeze(-1)
 
@@ -62,7 +85,7 @@ class BayesianOptimizer:
         ei = CustomExpectedImprovement(
             model=gp_model, best_y=self.train_y.max(), ksi=self.ksi
         )
-        ei_val = ei.acquire(self.grid)
+        ei_val = ei.acquire(normalized_grid)
 
         next_x = self.grid[ei_val.argmax()][0].double()
         next_y = self.objective_f(next_x)
@@ -106,6 +129,13 @@ class BayesianOptimizer:
         plt.subplot(2, 1, 1)
         plt.title("Predicted objective")
         plt.plot(self.grid[:, 0, 0], mean, label="Mean")
+        if self.debug:
+            plt.plot(
+                self.grid[:, 0, 0],
+                self.objective_f(self.grid[:, 0, 0]),
+                "--",
+                label="Actual function",
+            )
         if self.use_log:
             plt.xscale("log")
         plt.axvline(
