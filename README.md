@@ -38,15 +38,18 @@ It can be further customized like this:
 ```bash
 python optimize.py -i \  # i for interactive (display figure in blocking Window)
   --epochs 10 \  # train for 20 epochs each time
+  --min-lr 1e-4 \  # use 0.0001 minimum LR
+  --max-lr 1e-0  \  # use 1.0 maximum LR
   --batch-size 256 \  # use a batch size of 256
-  --layers 16 32 64 128 256 512  # set the ResNet layer sizes
+  --layers 16 32 64 128 256 512  # set the six ResNet layer sizes
 ```
 
 See the full usage below:
 
 ```text
-usage: optimizer [-h] [--init-steps INIT_STEPS] [--optim-steps OPTIM_STEPS] [-i] [-s SAVE_PATH]
-                 [--layers LAYERS LAYERS LAYERS LAYERS LAYERS LAYERS] [--batch-size BATCH_SIZE] [--epochs EPOCHS] [--device DEVICE]
+usage: optimizer [-h] [--init-steps INIT_STEPS] [--optim-steps OPTIM_STEPS] [--min-lr MIN_LR] [--max-lr MAX_LR] [--no-log10] [--debug] [-i]
+                 [-s SAVE_PATH] [--layers LAYERS LAYERS LAYERS LAYERS LAYERS LAYERS] [--batch-size BATCH_SIZE] [--epochs EPOCHS]
+                 [--device DEVICE]
 
 Bayesian Optimizer for finding the best learning rate for a ResNet model on the Fashion MNIST dataset.
 
@@ -56,6 +59,10 @@ options:
                         How many steps to initialize the bayesian optimizer with. (default: 3)
   --optim-steps OPTIM_STEPS
                         How many steps to perform Bayesian Optimization for. (default: 7)
+  --min-lr MIN_LR       Minimum learning rate to check. (default: 0.0001)
+  --max-lr MAX_LR       Maximum learning rate to check. (default: 1.0)
+  --no-log10            Uses linear scaling instead of logarithmic. (default: False)
+  --debug               Uses a much less expensive objective function for debug purposes. (default: False)
   -i, --interactive     Flag for displaying the figure interactively for each iteration in a blocking manner. (default: False)
   -s SAVE_PATH, --save-path SAVE_PATH
                         Where to save the figures, if specified. (default: ./figures/)
