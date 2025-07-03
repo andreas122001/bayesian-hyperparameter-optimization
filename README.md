@@ -37,7 +37,7 @@ It can be further customized like this:
 
 ```bash
 python optimize.py -i \  # i for interactive (display figure in blocking Window)
-  --epochs 10 \  # train for 20 epochs each time
+  --epochs 10 \  # train for 10 epochs each time
   --min-lr 1e-4 \  # use 0.0001 minimum LR
   --max-lr 1e-0  \  # use 1.0 maximum LR
   --batch-size 256 \  # use a batch size of 256
