@@ -134,6 +134,7 @@ def main(args: Namespace) -> None:
         min_bound=args.min_lr,
         max_bound=args.max_lr,
         use_log_scale=not args.no_log10,
+        debug=args.debug,
     )
     optimizer.initialize(args.init_steps)
 
