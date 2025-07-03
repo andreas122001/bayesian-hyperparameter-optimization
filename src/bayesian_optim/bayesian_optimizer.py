@@ -24,7 +24,7 @@ class BayesianOptimizer:
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
-        self.grid = torch.linspace(0.001, 1, steps=100).unsqueeze(-1).unsqueeze(-1)
+        self.grid = torch.logspace(-5, 0, steps=100).unsqueeze(-1).unsqueeze(-1)
 
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
@@ -91,6 +91,7 @@ class BayesianOptimizer:
         plt.subplot(2, 1, 1)
         plt.title("Predicted objective")
         plt.plot(self.grid[:, 0, 0], mean, label="Mean")
+        plt.xscale("log")
         plt.axvline(
             best_x.item(),
             linestyle="dashed",

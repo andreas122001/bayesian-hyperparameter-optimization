@@ -1,3 +1,5 @@
+import torch
+
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -27,7 +29,7 @@ class GaussianProcess:
         :returns: the trained Gaussian Process model.
         """
         model = SingleTaskGP(
-            train_X=train_x,
+            train_X=normalize(train_x, torch.tensor([[0.0], [1.0]])),
             train_Y=train_y,
             likelihood=self.likelihood,
         )
