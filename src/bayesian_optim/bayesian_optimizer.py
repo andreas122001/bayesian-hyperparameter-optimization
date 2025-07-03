@@ -24,7 +24,8 @@ class BayesianOptimizer:
 
         self.sobol_sampler = torch.quasirandom.SobolEngine(1, scramble=True)
 
-        self.grid = torch.logspace(-5, 0, steps=100).unsqueeze(-1).unsqueeze(-1)
+        self.bounds = torch.tensor([-5, 0])
+        self.grid = torch.logspace(*self.bounds, steps=100, base=10).unsqueeze(-1).unsqueeze(-1)
 
         self.train_x = torch.tensor([])
         self.train_y = torch.tensor([])
@@ -69,6 +70,10 @@ class BayesianOptimizer:
         """
         sampled_x = self.sobol_sampler.draw(n_samples, dtype=torch.float64)
 
+        # Convert Sobol sequence to log scale
+        sampled_x = self.bounds[0] + sampled_x*(self.bounds[1] - self.bounds[0])
+        sampled_x = 10**sampled_x
+
         for next_x in tqdm(sampled_x, desc="Initializing", leave=False):
             next_y = self.objective_f(next_x)
             self._add_datapoint(next_x, next_y)
@@ -97,7 +102,7 @@ class BayesianOptimizer:
             linestyle="dashed",
             label="Current best",
         )
-        plt.text(best_x + 0.01, mean.min(), s=f"x={best_x:.3f}")
+        plt.text(best_x + 0.01, mean.min(), s=f"x={best_x:.3e}")
         plt.fill_between(
             self.grid[:, 0, 0],
             mean - 2 * std,
@@ -119,6 +124,7 @@ class BayesianOptimizer:
         plt.subplot(2, 1, 2)
         plt.title("Acquisition function")
         plt.plot(self.grid[:, 0, 0], ei_val.detach())
+        plt.xscale("log")
         plt.scatter(
             self.grid[ei_val.argmax(0), 0, 0], ei_val.detach().max(), color="green"
         )
